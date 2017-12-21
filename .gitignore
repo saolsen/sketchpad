@@ -1,0 +1,4 @@
+build.ninja
+build
+.vscode/c_cpp_properties.json
+misc/__pycache__

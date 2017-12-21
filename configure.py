@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# pylint: disable=C0413
+# pylint: disable=C0303
 """
 Build sketches
 """
