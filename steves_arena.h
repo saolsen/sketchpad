@@ -10,7 +10,7 @@ Allocations are 16 byte aligned.
 Heavily influenced by handmade hero's arenas.
 
 @TODO: more push helpers, pushCopy and pushString
-@TODO: pass in wanted alignment
+@TODO: pass in wanted alignment (or at least allow 32 byte so we can easily get arrays on different cache lines)
 @TODO: tests for the alignment
 @TODO: arena iterator for debug purposes
 
@@ -30,7 +30,7 @@ When do you want to use this?
 
 #define MAX_(a, b) ((a > b) ? (a) : (b))
 
-typedef struct MemoryBlock_t {
+typedef struct MemoryBlockFooter_t {
     uint8_t *base;
     uintptr_t used;
     uintptr_t capacity;
@@ -50,11 +50,11 @@ typedef struct {
 typedef struct {
     MemoryArena *arena;
     uint8_t *begin;
-} TempMemory;
+} ArenaTempMemory;
 
 #define zeroStruct(instance) zeroSize(sizeof(instance), &(instance))
 #define zeroArray(count, ptr) zeroSize(sizeof(ptr[0]) * count, ptr)
-inline void
+void
 zeroSize(uintptr_t size, void *ptr)
 {
     uint8_t *byte = (uint8_t*)ptr;
@@ -63,12 +63,12 @@ zeroSize(uintptr_t size, void *ptr)
     }
 }
 
-#define pushType(a, t) (t*)pushSize(a, sizeof(t), false)
-#define pushArray(a, t, n) (t*)pushSize(a, sizeof(t)*n, false)
-#define pushEmptyType(a, t) (t*)pushSize(a, sizeof(t), true)
-#define pushEmptyArray(a, t, n) (t*)pushSize(a, sizeof(t)*n, true)
-inline void *
-pushSize(MemoryArena *arena, uintptr_t size_init, bool clear_to_zero)
+#define arenaPushType(a, t) (t*)arenaPushSize(a, sizeof(t), false)
+#define arenaPushArray(a, t, n) (t*)arenaPushSize(a, sizeof(t)*n, false)
+#define arenaPushEmptyType(a, t) (t*)arenaPushSize(a, sizeof(t), true)
+#define arenaPushEmptyArray(a, t, n) (t*)arenaPushSize(a, sizeof(t)*n, true)
+void *
+arenaPushSize(MemoryArena *arena, uintptr_t size_init, bool clear_to_zero)
 {
     uint8_t *result = (uint8_t*)((uint8_t)(arena->base + arena->used) + 15 & ~ (uintptr_t)0x0F);
     uintptr_t align_offset = result - (arena->base + arena->used);
@@ -112,21 +112,21 @@ pushSize(MemoryArena *arena, uintptr_t size_init, bool clear_to_zero)
     return result;
 }
 
-#define bootstrapPushStruct(type, field) bootstrapPushSize(sizeof(type), offsetof(type, field))
-inline void*
-bootstrapPushSize(uintptr_t size, uintptr_t offset_to_arena)
+#define arenaBootstrapPushStruct(type, field) arenaBootstrapPushSize(sizeof(type), offsetof(type, field))
+void*
+arenaBootstrapPushSize(uintptr_t size, uintptr_t offset_to_arena)
 {
     MemoryArena bootstrap = {0};
-    void *result = pushSize(&bootstrap, size, true);
+    void *result = arenaPushSize(&bootstrap, size, true);
     *(MemoryArena*)((uint8_t*)result + offset_to_arena) = bootstrap;
 
     return result;
 }
 
-inline TempMemory
-beginTempMemory(MemoryArena *arena)
+ArenaTempMemory
+arenaBeginTempMemory(MemoryArena *arena)
 {
-    TempMemory temp_memory;
+    ArenaTempMemory temp_memory;
     
     temp_memory.arena = arena;
     temp_memory.begin = arena->base + arena->used;
@@ -136,8 +136,8 @@ beginTempMemory(MemoryArena *arena)
     return temp_memory;
 }
 
-inline void
-endTempMemory(TempMemory temp_memory)
+void
+arenaEndTempMemory(ArenaTempMemory temp_memory)
 {    
     MemoryArena *arena = temp_memory.arena;
     while ((temp_memory.begin < arena->base) ||

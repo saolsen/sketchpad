@@ -64,6 +64,11 @@ N.rule('compile',
        deps='gcc')
 N.newline()
 
+N.rule('compile_dynamic_lib',
+       '$cc $cflags -dynamiclib -undefined dynamic_lookup -MMD -MF $out.d -o $out $in',
+       depfile='$out.d',
+       deps='gcc')
+
 N.rule('link', '$ld -o $out $in $ldflags')
 N.newline()
 
@@ -74,5 +79,11 @@ N.newline()
 N.comment("ray tracer")
 N.build('$builddir/raytracer', 'compile', 'raytracer.c')
 N.newline()
+
+N.comment("test_reload")
+N.build('$builddir/lib_test_reload.dylib', 'compile_dynamic_lib', 'test_reload_lib.c')
+N.build('$builddir/test_reload', 'compile', 'test_reload.c')
+N.newline()
+
 
 N.close()
