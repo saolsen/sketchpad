@@ -45,7 +45,7 @@ CFLAGS = [
     '-Wall',
     '-fcolor-diagnostics',
     # Include paths
-    
+    '-I3rdparty',
     # Warnings
     '-Wno-missing-braces'
 ]
@@ -59,7 +59,7 @@ N.variable('ldflags', " ".join(LDFLAGS))
 N.newline()
 
 N.rule('compile',
-       '$cc $cflags -MMD -MF $out.d -c -o $out $in',
+       '$cc $cflags -MMD -MF $out.d -o $out $in',
        depfile='$out.d',
        deps='gcc')
 N.newline()
@@ -68,7 +68,11 @@ N.rule('link', '$ld -o $out $in $ldflags')
 N.newline()
 
 N.comment("hello world")
-N.build('$builddir/hello_world.o', 'compile', 'hello_world.c')
-N.build('$builddir/hello_world', 'link', '$builddir/hello_world.o')
+N.build('$builddir/hello_world', 'compile', 'hello_world.c')
+N.newline()
+
+N.comment("ray tracer")
+N.build('$builddir/raytracer', 'compile', 'raytracer.c')
+N.newline()
 
 N.close()
