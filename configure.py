@@ -70,10 +70,10 @@ N.rule('link_sdl2', '$ld -o $out $in $ldflags -F 3rdparty/lib -framework SDL2 -f
 N.newline()
 
 BUNDLE_COMMANDS = [
-    'mkdir -p $builddir/$out/Contents/{MacOS,Resources,Frameworks}',
-    'cp misc/Info.plist $builddir/$out/Contents/Info.plist',
-    "sed -i -e 's/{APP}/$name/g' $builddir/$out/Contents/Info.plist",
-    "rsync -aq 3rdparty/lib/SDL2.framework $builddir/$out/Contents/Frameworks/"
+    'mkdir -p $out/Contents/{MacOS,Resources,Frameworks}',
+    'cp misc/Info.plist $out/Contents/Info.plist',
+    "sed -i -e 's/{APP}/$name/g' $out/Contents/Info.plist",
+    "rsync -aq 3rdparty/lib/SDL2.framework $out/Contents/Frameworks/"
 ]
 
 N.rule('app_bundle', ' && '.join(BUNDLE_COMMANDS))
@@ -98,7 +98,10 @@ def app_exe_file(appname, filename):
     return '$builddir/' + appname + '.app/Contents/MacOS/' + filename
 
 def dylib_file(name):
-    return '$builddir/' + name + ".dylib"
+    return '$builddir/' + name + '.dylib'
+
+def app_bundle(name):
+    return '$builddir/' + name + '.app'
 
 def extend_cflags(additional_flags):
     return CFLAGS + ' ' + additional_flags
@@ -133,7 +136,7 @@ N.newline()
 
 # Simple sdl2 example without reloading.
 N.comment('sdl2_example')
-N.build('sdl2_example.app', 'app_bundle', variables={'name': 'sdl2_example'})
+N.build(app_bundle('sdl2_example'), 'app_bundle', variables={'name': 'sdl2_example'})
 N.build(obj_file('sdl2_example'), 'compile', c_file('sdl2_example'))
 N.build(exe_file('sdl2_example'), 'link_sdl2', [obj_file('sdl2_example'), obj_file('nanovg'), obj_file('glad')])
 N.build(app_exe_file('sdl2_example', 'sdl2_example'), 'copy_file', exe_file('sdl2_example'))
