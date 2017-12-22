@@ -11,7 +11,7 @@ int main() {
     FunctionSpec function = {.function_name = "foo", .function_ptr = (void*)&foo};
 
     LibrarySpec spec = {
-        .library_file = "lib_test_reload.dylib",
+        .library_file = "libtestreload.dylib",
         .num_functions = 1,
         .functions = &function
     };

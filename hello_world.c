@@ -22,6 +22,8 @@ main() {
     state->max_clouds = 10;
     state->clouds = arenaPushArray(state->arena, uint8_t, state->max_clouds);
     zeroArray(state->max_clouds, state->clouds);
+    
+    
 
     // I do wish to learn how to use libcurl from c....
     // I also want to know how to use

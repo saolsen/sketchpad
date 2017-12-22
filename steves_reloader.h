@@ -10,6 +10,7 @@
 // @TODO: implement the windows and linux versions in here.
 // @TODO: Make it easier to find the library when the program isn't run from the
 //        same directory as the exe.
+// @Q: How do I get the directory the exe is in?
 
 #ifndef _steves_reloader_h
 #define _steves_reloader_h
@@ -47,8 +48,6 @@ libraryInit(LibrarySpec spec)
     return library;
 }
 
-
-
 // Checks if the library has been updated and if it has reloads it.
 int
 libraryReload(Library *library)
@@ -62,7 +61,6 @@ libraryReload(Library *library)
             dlclose(library->handle);
         }
         
-        // @TODO: Make sure the library name is right.
         void* handle = dlopen(library->spec.library_file, RTLD_NOW);
 
         if (handle) {
