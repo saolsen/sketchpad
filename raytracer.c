@@ -73,24 +73,8 @@ color(f32 r, f32 g, f32 b)
     return color;
 }
 
-
 int
 main(void) {
-    u32 width = 300;
-    u32 height = 300;
-    Color data[width*height];
-
-    logInfo("Generating Map");
-    for (i32 y=0; y<height; y++) {
-        for (i32 x=0; x<width; x++) {
-            data[y*width + x] = color(1.0, 0.0, 0.0);
-        }
-    }
-    
-    logInfo("Writing Map to map.png");
-    stbi_write_png("map.png", width, height, 4, data, sizeof(Color)*width);
-
-    logInfo("Done");
 
     Material materials[2] = {
         {.color=v3(0,0,0)},
@@ -111,6 +95,22 @@ main(void) {
         .spheres=NULL,
         .sphere_count=0
     };
+
+    u32 width = 300;
+    u32 height = 300;
+    Color data[width*height];
+
+    logInfo("Generating Map");
+    for (i32 y=0; y<height; y++) {
+        for (i32 x=0; x<width; x++) {
+            data[y*width + x] = color(1.0, 0.0, 0.0);
+        }
+    }
+
+    logInfo("Writing Map to map.png");
+    stbi_write_png("map.png", width, height, 4, data, sizeof(Color)*width);
+
+    logInfo("Done");
 
     return(0);
 }
