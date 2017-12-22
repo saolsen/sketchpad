@@ -17,6 +17,6 @@ A simple raytracer, based on the handmade ray videos
 
 There's also some libraries in there, most of those are prefixed with `steves`.
 
-### tests
+### tests and examples
 
-You know, tests for stuff, mostly prefixed `test`
+You know, tests and examples for stuff, mostly prefixed `test` or `example`
