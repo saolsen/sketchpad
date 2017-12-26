@@ -41,9 +41,8 @@ typedef struct {
 Library
 libraryInit(LibrarySpec spec)
 {
-    Library library = {
-        .spec = spec
-    };
+    Library library = {0};
+    library.spec = spec;
 
     return library;
 }
@@ -52,6 +51,7 @@ libraryInit(LibrarySpec spec)
 int
 libraryReload(Library *library)
 {
+    logInfo("check it");
     struct stat attr;
     if ((stat(library->spec.library_file, &attr) == 0) &&
         (library->id != attr.st_ino)) {

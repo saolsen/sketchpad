@@ -35,13 +35,13 @@ N.newline()
 
 N.variable('builddir', 'build')
 N.variable('cc', 'clang')
-N.variable('ld', '$cc')
+N.variable('cpp', 'clang++')
+N.variable('ld', '$cpp')
 N.newline()
 
-CFLAGS = " ".join([
+CPPFLAGS = " ".join([
     # Common Compiler Flags
     '-g',
-    '-std=c99',
     '-Wall',
     '-fcolor-diagnostics',
     # Include paths
@@ -50,12 +50,28 @@ CFLAGS = " ".join([
     '-Wno-missing-braces'
 ])
 
+CFLAGS = " ".join([
+    '-std=c99',
+])
+
+CXXFLAGS = " ".join([
+    '-std=c++11',
+])
+
+N.variable('cppflags', CPPFLAGS)
 N.variable('cflags', CFLAGS)
+N.variable('cxxflags', CXXFLAGS)
 N.variable('ldflags', '')
 N.newline()
 
 N.rule('compile',
-       '$cc $cflags -MMD -MF $out.d -c -o $out $in $ldflags',
+       '$cc $cppflags $cflags -MMD -MF $out.d -c -o $out $in $ldflags',
+       depfile='$out.d',
+       deps='gcc')
+N.newline()
+
+N.rule('compile_cpp',
+       '$cpp $cppflags $cxxflags -MMD -MF $out.d -c -o $out $in $ldflags',
        depfile='$out.d',
        deps='gcc')
 N.newline()
@@ -85,8 +101,14 @@ N.newline()
 def c_file(name):
     return name + ".c"
 
+def cpp_file(name):
+    return name + ".cpp"
+
 def dep_file(name):
     return '3rdparty/'+ name + ".c"
+
+def cpp_dep_file(name):
+    return '3rdparty/'+ name + ".cpp"
 
 def obj_file(name):
     return '$builddir/'+ name + ".o"
@@ -111,8 +133,24 @@ N.comment('nanovg')
 N.build(obj_file('nanovg'), 'compile', dep_file('nanovg'))
 N.newline()
 
-N.comment('glad')
-N.build(obj_file('glad'), 'compile', dep_file('glad'), variables={'cflags': extend_cflags('-Wno-unused-function')})
+N.comment('gl3w')
+N.build(obj_file('gl3w'), 'compile', dep_file('gl3w'))
+N.newline()
+
+N.comment('imgui')
+N.build(obj_file('imgui'), 'compile_cpp', cpp_dep_file('imgui'))
+N.newline()
+
+N.comment('imgui_draw')
+N.build(obj_file('imgui_draw'), 'compile_cpp', cpp_dep_file('imgui_draw'))
+N.newline()
+
+N.comment('imgui_demo')
+N.build(obj_file('imgui_demo'), 'compile_cpp', cpp_dep_file('imgui_demo'))
+N.newline()
+
+N.comment('imgui_impl_sdl_gl3')
+N.build(obj_file('imgui_impl_sdl_gl3'), 'compile_cpp', cpp_dep_file('imgui_impl_sdl_gl3'))
 N.newline()
 
 # Typical sketches, simple little programs
@@ -138,7 +176,23 @@ N.newline()
 N.comment('sdl2_example')
 N.build(app_bundle('sdl2_example'), 'app_bundle', variables={'name': 'sdl2_example'})
 N.build(obj_file('sdl2_example'), 'compile', c_file('sdl2_example'))
-N.build(exe_file('sdl2_example'), 'link_sdl2', [obj_file('sdl2_example'), obj_file('nanovg'), obj_file('glad')])
+N.build(exe_file('sdl2_example'), 'link_sdl2', [obj_file('sdl2_example'), obj_file('nanovg'), obj_file('gl3w')])
 N.build(app_exe_file('sdl2_example', 'sdl2_example'), 'copy_file', exe_file('sdl2_example'))
+
+# Imgui c++ example
+N.comment('imgui_example')
+N.build(app_bundle('imgui_example'), 'app_bundle', variables={'name': 'imgui_example'})
+N.build(obj_file('imgui_example_lib'), 'compile_cpp', cpp_file('imgui_example_lib'))
+N.build(dylib_file('libimguiexample'), 'link_dylib', obj_file('imgui_example_lib'))
+N.build(obj_file('imgui_example'), 'compile_cpp', cpp_file('imgui_example'))
+N.build(exe_file('imgui_example'), 'link_sdl2', [
+    obj_file('imgui_example'),
+    obj_file('gl3w'),
+    obj_file('imgui'),
+    obj_file('imgui_draw'),
+    obj_file('imgui_demo'),
+    obj_file('imgui_impl_sdl_gl3')])
+N.build(app_exe_file('imgui_example', 'libimguiexample.dylib'), 'copy_file', exe_file('libimguiexample.dylib'))
+N.build(app_exe_file('imgui_example', 'imgui_example'), 'copy_file', exe_file('imgui_example'))
 
 N.close()

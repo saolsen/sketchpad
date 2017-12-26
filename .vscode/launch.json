@@ -11,6 +11,14 @@
             "program": "${workspaceRoot}/build/test_reload",
             "args": [],
             "cwd": "${workspaceRoot}/build"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "imgui_example",
+            "program": "${workspaceRoot}/build/imgui_example.app/Contents/MacOS/imgui_example",
+            "args": [],
+            "cwd": "${workspaceRoot}/build/imgui_example.app/Contents/MacOS"
         }
     ]
 }

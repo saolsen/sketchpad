@@ -1,19 +1,27 @@
-// @NOTE: This is an example of how to do a simple SDL game.
-// It's sort of a template but not exactly, should be easy to copy paste to another file and use as the bases for any
-// sort of experiments or games.
-
 #include "steve.h"
+#include "steves_reloader.h"
 
 #include <GL/gl3w.h>
-//#include <glad/glad.h>
 #include <SDL2/SDL.h>
-#define NANOVG_GL3_IMPLEMENTATION
-#include <nanovg.h>
-#include <nanovg_gl.h>
+
+#include "imgui_example.h"
+#include <imgui_impl_sdl_gl3.h>
 
 int
 main(int argc, char **argv)
 {
+    UpdateAndRender *updateAndRender;
+
+    FunctionSpec function = {.function_name = "updateAndRender", .function_ptr = (void**)&updateAndRender};
+
+    LibrarySpec spec = {
+        .library_file = "libimguiexample.dylib",
+        .num_functions = 1,
+        .functions = &function
+    };
+
+    Library library = libraryInit(spec);
+
     if (SDL_Init(SDL_INIT_VIDEO)) {
         exit(-1);
     }
@@ -29,7 +37,7 @@ main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_Window *window = SDL_CreateWindow("gui example",
+    SDL_Window *window = SDL_CreateWindow("example",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           1024,
@@ -66,11 +74,8 @@ main(int argc, char **argv)
     f32 game_update_hz = (f32)display_mode.refresh_rate;
     f32 target_seconds_per_frame = 1.0f / game_update_hz;
 
-    // Setup nanovg
-    NVGcontext *vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-    if (vg == NULL) {
-        exit(-1);
-    }
+    // Setup imgui
+    ImGui_ImplSdlGL3_Init(window);
 
     u64 update_time = 0;
     u64 frame_time = 0;
@@ -78,14 +83,23 @@ main(int argc, char **argv)
     u64 last_counter = SDL_GetPerformanceCounter();
     u64 last_start_time = SDL_GetTicks();
 
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    void *memory = NULL;
+
     bool running = true;
     while (running) {
         i32 start_time = SDL_GetTicks();
         frame_time = start_time - last_start_time;
         last_start_time = start_time;
 
+        if (libraryReload(&library)) {
+            logInfo("Library Reloaded");
+        }
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
+            ImGui_ImplSdlGL3_ProcessEvent(&event);
             switch(event.type) {
                 case SDL_QUIT: {
                     running = false;
@@ -99,17 +113,14 @@ main(int argc, char **argv)
         SDL_GetWindowSize(window, &width, &height);
         SDL_GL_GetDrawableSize(window, &display_w, &display_h);
 
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        ImGui_ImplSdlGL3_NewFrame(window);
+
+        memory = updateAndRender(memory);
+
+        glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        nvgBeginFrame(vg, width, height, display_w/width);
-
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBf(1,0,0));
-        nvgRect(vg, 10, 10, 10, 10);
-        nvgFill(vg);
-
-        nvgEndFrame(vg);
+        ImGui::Render();
 
         update_time = SDL_GetTicks() - start_time;
         f64 time_till_vsync = target_seconds_per_frame * 1000.0 - (SDL_GetTicks() - start_time);
