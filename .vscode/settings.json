@@ -2,6 +2,7 @@
     "files.associations": {
         "time.h": "c",
         "steve.h": "c",
-        "test_reload.h": "c"
+        "test_reload.h": "c",
+        "imgui_impl_sdl_gl3.h": "c"
     }
 }

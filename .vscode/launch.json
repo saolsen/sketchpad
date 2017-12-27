@@ -7,6 +7,14 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "dumb",
+            "program": "${workspaceRoot}/build/dumb.app/Contents/MacOS/dumb",
+            "args": [],
+            "cwd": "${workspaceRoot}/build/dumb.app/Contents/MacOS"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "test_reload",
             "program": "${workspaceRoot}/build/test_reload",
             "args": [],

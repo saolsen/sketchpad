@@ -20,6 +20,10 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
+#ifndef RELOAD_SDL
+#define RELOAD_SDL false
+#endif
+
 typedef struct {
     char *function_name;
     void **function_ptr;
@@ -51,7 +55,14 @@ libraryInit(LibrarySpec spec)
 int
 libraryReload(Library *library)
 {
-    logInfo("check it");
+    // @TODO: Do this at setup time not every reload
+    char path_buf[256];
+    #if RELOAD_SDL
+    char *base_path = SDL_GetBasePath();
+    snprintf(path_buf, 256, "%s%s", base_path, library->spec.library_file);
+    #else
+    snprintf(path_buf, 256, "%s", library->spec.library_file);
+    #endif
     struct stat attr;
     if ((stat(library->spec.library_file, &attr) == 0) &&
         (library->id != attr.st_ino)) {
@@ -61,7 +72,7 @@ libraryReload(Library *library)
             dlclose(library->handle);
         }
         
-        void* handle = dlopen(library->spec.library_file, RTLD_NOW);
+        void* handle = dlopen(path_buf, RTLD_NOW);
 
         if (handle) {
             library->handle = handle;

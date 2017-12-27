@@ -1,4 +1,7 @@
+.DS_Store
 build.ninja
 build
+build_osx
+build_linux
 .vscode/c_cpp_properties.json
 misc/__pycache__

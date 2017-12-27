@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  shell:
+    build:
+      context: ..
+      dockerfile: misc/Dockerfile
+    volumes:
+     - ../:/sketchbook
+     - /Users/stephenolsen/.ssh:/root/.ssh
