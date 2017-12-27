@@ -1,13 +1,27 @@
 #include "steve.h"
 
+typedef struct {
+    u64 stebens;
+} Steben;
+
+// Generate something neato
+
+int
+main(int argc, char *argv[])
+{
+    Steben s = {.stebens=15};
+
+    logInfo("Hello World %" PRIu64, s.stebens);
+    return 0;
+}
+
+/*
 #include <GL/gl3w.h>
 #include <SDL2/SDL.h>
 
 int
 main(int argc, char **argv)
 {
-    logInfo("Hellow");
-
     if (SDL_Init(SDL_INIT_VIDEO)) {
         exit(-1);
     }
@@ -112,3 +126,4 @@ main(int argc, char **argv)
     SDL_Quit();
     return(0);
 }
+*/

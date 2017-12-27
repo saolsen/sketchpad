@@ -5,3 +5,4 @@ build_osx
 build_linux
 .vscode/c_cpp_properties.json
 misc/__pycache__
+misc/ninja_syntax.pyc
