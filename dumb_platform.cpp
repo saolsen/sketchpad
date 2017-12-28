@@ -1,10 +1,8 @@
-#include "steve.h"
-
+// Making something for the switch could b fun
 #include <GL/gl3w.h>
 #include <SDL2/SDL.h>
 
-#include "imgui_example.h"
-#include "imgui_example_lib.cpp"
+#include "dumb.h"
 #include <imgui_impl_sdl_gl3.h>
 
 int
@@ -25,7 +23,7 @@ main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_Window *window = SDL_CreateWindow("example",
+    SDL_Window *window = SDL_CreateWindow("dumb",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           1024,

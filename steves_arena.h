@@ -70,7 +70,9 @@ zeroSize(uintptr_t size, void *ptr)
 void *
 arenaPushSize(MemoryArena *arena, uintptr_t size_init, bool clear_to_zero)
 {
-    uint8_t *result = (uint8_t*)((uint8_t)(arena->base + arena->used) + 15 & ~ (uintptr_t)0x0F);
+    // uh, how do you do the damn thingy here?
+    // How do I align this pointer properly?
+    uint8_t *result = (uint8_t*)((uintptr_t)(arena->base + arena->used) + 15 & ~ (uintptr_t)0x0F); // @TODO: Other alignments.
     uintptr_t align_offset = result - (arena->base + arena->used);
     uint64_t size = size_init + align_offset;
 
@@ -112,7 +114,7 @@ arenaPushSize(MemoryArena *arena, uintptr_t size_init, bool clear_to_zero)
     return result;
 }
 
-#define arenaBootstrapPushStruct(type, field) arenaBootstrapPushSize(sizeof(type), offsetof(type, field))
+#define arenaBootstrapPushStruct(type, field) (type*)(arenaBootstrapPushSize(sizeof(type), offsetof(type, field)))
 void*
 arenaBootstrapPushSize(uintptr_t size, uintptr_t offset_to_arena)
 {

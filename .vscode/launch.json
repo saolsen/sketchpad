@@ -7,6 +7,14 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "test_steve_tools",
+            "program": "${workspaceRoot}/build_osx/test_steve_Tools",
+            "args": [],
+            "cwd": "${workspaceRoot}/build_osx"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "dumb",
             "program": "${workspaceRoot}/build_osx/dumb.app/Contents/MacOS/dumb",
             "args": [],

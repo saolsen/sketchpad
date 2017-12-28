@@ -75,6 +75,7 @@ if PLATFORM == 'osx':
         '-fcolor-diagnostics',
         # Include paths
         '-I3rdparty',
+        '-I3rdparty/pcg-c-0.94/include'
         # Warnings
         '-Wno-missing-braces'
     ])
@@ -163,6 +164,11 @@ if PLATFORM == 'osx':
     N.build(exe_file('raytracer'), 'link_exe', obj_file('raytracer'))
     N.newline()
 
+    N.comment('test_steve_tools')
+    N.build(obj_file('test_steve_tools'), 'compile', c_file('test_steve_tools'))
+    N.build(exe_file('test_steve_tools'), 'link_exe', obj_file('test_steve_tools'))
+    N.newline()
+
     # Reloading but not in an app bundle.
     N.comment('test_reload')
     N.build(obj_file('test_reload'), 'compile', c_file('test_reload'))
@@ -194,11 +200,22 @@ if PLATFORM == 'osx':
     N.build(app_exe_file('imgui_example', 'libimguiexample.dylib'), 'copy_file', exe_file('libimguiexample.dylib'))
     N.build(app_exe_file('imgui_example', 'imgui_example'), 'copy_file', exe_file('imgui_example'))
 
-    # Try cimgui
+    # Try pcg
     N.comment('dumb')
     N.build(app_bundle('dumb'), 'app_bundle', variables={'name': 'dumb'})
-    N.build(obj_file('dumb'), 'compile', c_file('dumb'))
-    N.build(exe_file('dumb'), 'link_sdl2', [obj_file('dumb'), obj_file('gl3w')])
+    N.build(obj_file('dumb_platform'), 'compile_cpp', cpp_file('dumb_platform'))
+    N.build(obj_file('dumb'), 'compile_cpp', cpp_file('dumb'))
+    N.build(exe_file('dumb'), 'link_sdl2', [
+        obj_file('dumb_platform'),
+        obj_file('dumb'),
+        obj_file('gl3w'),
+        obj_file('imgui'),
+        obj_file('imgui_draw'),
+        obj_file('imgui_demo'),
+        obj_file('imgui_impl_sdl_gl3')
+        ], variables={
+        'ldflags': '-L3rdparty/lib -lpcg_random'
+    })
     N.build(app_exe_file('dumb', 'dumb'), 'copy_file', exe_file('dumb'))
 
 elif PLATFORM == 'linux':
