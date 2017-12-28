@@ -262,4 +262,14 @@ elif PLATFORM == 'linux':
     N.build(exe_file('test_linux'), 'link_exe', obj_file('test_linux'))
     N.newline()
 
+    N.comment('raytracer')
+    N.build(obj_file('raytracer'), 'compile', c_file('raytracer'))
+    N.build(exe_file('raytracer'), 'link_exe', obj_file('raytracer'))
+    N.newline()
+
+    N.comment('test_steve_tools')
+    N.build(obj_file('test_steve_tools'), 'compile', c_file('test_steve_tools'))
+    N.build(exe_file('test_steve_tools'), 'link_exe', obj_file('test_steve_tools'))
+    N.newline()
+
 N.close()

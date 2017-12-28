@@ -1,3 +1,7 @@
+// I want to learn iocp, write some iocp code (and port it to also work with epoll on linux).
+// I want a really great priority queue multithreaded task system thingy.
+// I need some reasons to write either of those tho. A problem to solve.
+
 #include "steves_tools.h"
 
 typedef struct {
@@ -8,7 +12,7 @@ typedef struct {
 int main() {
     logInfo("Hello Steve Tools wow");
 
-    logInfo("size of my struct is %" PRIu32, sizeof(STBuf));
+    logInfo("size of my struct is %lu", sizeof(STBuf));
 
     Tester *testers = NULL;
     for (int i=0; i<10; i++) {
