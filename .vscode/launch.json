@@ -15,10 +15,10 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "dumb",
-            "program": "${workspaceRoot}/build_osx/dumb.app/Contents/MacOS/dumb",
+            "name": "adventure",
+            "program": "${workspaceRoot}/build_osx/adventure.app/Contents/MacOS/adventure",
             "args": [],
-            "cwd": "${workspaceRoot}/build_osx/dumb.app/Contents/MacOS"
+            "cwd": "${workspaceRoot}/build_osx/adventure.app/Contents/MacOS"
         },
         {
             "type": "lldb",

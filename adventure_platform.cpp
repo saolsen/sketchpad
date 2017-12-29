@@ -2,8 +2,13 @@
 #include <GL/gl3w.h>
 #include <SDL2/SDL.h>
 
-#include "dumb.h"
+#include "adventure.h"
 #include <imgui_impl_sdl_gl3.h>
+#define NANOVG_GL3_IMPLEMENTATION
+#include <nanovg.h>
+#include <nanovg_gl.h>
+
+NVGcontext *vg;
 
 int
 main(int argc, char **argv)
@@ -15,7 +20,7 @@ main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
                         SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                         SDL_GL_CONTEXT_PROFILE_CORE);
 
@@ -23,7 +28,7 @@ main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_Window *window = SDL_CreateWindow("dumb",
+    SDL_Window *window = SDL_CreateWindow("adventure game",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           1024,
@@ -42,11 +47,11 @@ main(int argc, char **argv)
     }
 
     if (gl3wInit()) {
-		fprintf(stderr, "failed to initialize OpenGL\n");
+		logError("failed to initialize OpenGL");
 		return -1;
 	}
-	if (!gl3wIsSupported(3, 2)) {
-		fprintf(stderr, "OpenGL 3.2 not supported\n");
+	if (!gl3wIsSupported(3, 3)) {
+		logError("OpenGL 3.3 not supported");
 		return -1;
 	}
 
@@ -62,6 +67,13 @@ main(int argc, char **argv)
 
     // Setup imgui
     ImGui_ImplSdlGL3_Init(window);
+
+    // Setup nanovg
+    // Setup nanovg
+    vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    if (vg == NULL) {
+        exit(-1);
+    }
 
     u64 update_time = 0;
     u64 frame_time = 0;
@@ -97,11 +109,14 @@ main(int argc, char **argv)
 
         ImGui_ImplSdlGL3_NewFrame(window);
 
+        nvgBeginFrame(vg, width, height, display_w/width);
+
         memory = updateAndRender(memory);
 
-        glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        nvgEndFrame(vg);
+        //glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
         ImGui::Render();
 
         update_time = SDL_GetTicks() - start_time;

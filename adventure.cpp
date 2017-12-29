@@ -1,4 +1,4 @@
-#include "dumb.h"
+#include "adventure.h"
 #include "steves_arena.h"
 
 #include "pcg_variants.h"
@@ -98,6 +98,11 @@ extern "C" UPDATE_AND_RENDER(updateAndRender) {
         };
     }
     ImGui::End();
+
+    nvgBeginPath(vg);
+    nvgFillColor(vg, nvgRGBf(1,0,0));
+    nvgRect(vg, 0, 0, 10, 10);
+    nvgFill(vg);
 
     return gamestate;
 }

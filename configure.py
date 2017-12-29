@@ -201,14 +201,15 @@ if PLATFORM == 'osx':
     N.build(app_exe_file('imgui_example', 'imgui_example'), 'copy_file', exe_file('imgui_example'))
 
     # Try pcg
-    N.comment('dumb')
-    N.build(app_bundle('dumb'), 'app_bundle', variables={'name': 'dumb'})
-    N.build(obj_file('dumb_platform'), 'compile_cpp', cpp_file('dumb_platform'))
-    N.build(obj_file('dumb'), 'compile_cpp', cpp_file('dumb'))
-    N.build(exe_file('dumb'), 'link_sdl2', [
-        obj_file('dumb_platform'),
-        obj_file('dumb'),
+    N.comment('adventure')
+    N.build(app_bundle('adventure'), 'app_bundle', variables={'name': 'adventure'})
+    N.build(obj_file('adventure_platform'), 'compile_cpp', cpp_file('adventure_platform'))
+    N.build(obj_file('adventure'), 'compile_cpp', cpp_file('adventure'))
+    N.build(exe_file('adventure'), 'link_sdl2', [
+        obj_file('adventure_platform'),
+        obj_file('adventure'),
         obj_file('gl3w'),
+        obj_file('nanovg'),
         obj_file('imgui'),
         obj_file('imgui_draw'),
         obj_file('imgui_demo'),
@@ -216,7 +217,7 @@ if PLATFORM == 'osx':
         ], variables={
         'ldflags': '-L3rdparty/lib -lpcg_random'
     })
-    N.build(app_exe_file('dumb', 'dumb'), 'copy_file', exe_file('dumb'))
+    N.build(app_exe_file('adventure', 'adventure'), 'copy_file', exe_file('adventure'))
 
 elif PLATFORM == 'linux':
     N.comment('build sketches for %s' % PLATFORM)
