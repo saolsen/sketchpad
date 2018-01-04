@@ -1,6 +1,11 @@
 #include "steve.h"
+
 #include "imgui.h"
 #include "nanovg.h"
+#include "minitrace.h"
+#include "pcg_variants.h"
+
+#include <tgmath.h>
 
 // Stuff set by the platform to be used by the game.
 extern NVGcontext *vg;

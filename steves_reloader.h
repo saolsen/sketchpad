@@ -20,10 +20,6 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
-#ifndef RELOAD_SDL
-#define RELOAD_SDL false
-#endif
-
 typedef struct {
     char *function_name;
     void **function_ptr;
@@ -39,7 +35,7 @@ typedef struct {
     LibrarySpec spec;
 
     void *handle;
-    ino_t id;
+    struct timespec mtime;
 } Library;
 
 Library
@@ -55,28 +51,21 @@ libraryInit(LibrarySpec spec)
 int
 libraryReload(Library *library)
 {
-    // @TODO: Do this at setup time not every reload
-    char path_buf[256];
-    #if RELOAD_SDL
-    char *base_path = SDL_GetBasePath();
-    snprintf(path_buf, 256, "%s%s", base_path, library->spec.library_file);
-    #else
-    snprintf(path_buf, 256, "%s", library->spec.library_file);
-    #endif
     struct stat attr;
     if ((stat(library->spec.library_file, &attr) == 0) &&
-        (library->id != attr.st_ino)) {
+        (library->mtime.tv_nsec != attr.st_mtimespec.tv_nsec ||
+         library->mtime.tv_sec != attr.st_mtimespec.tv_sec)) {
         logInfo("New library to load");
         
         if (library->handle) {
             dlclose(library->handle);
         }
         
-        void* handle = dlopen(path_buf, RTLD_NOW);
+        void* handle = dlopen(library->spec.library_file, RTLD_NOW);
 
         if (handle) {
             library->handle = handle;
-            library->id = attr.st_ino;
+            library->mtime = attr.st_mtimespec;
 
             for (int i=0; i<library->spec.num_functions; i++) {
                 FunctionSpec spec = library->spec.functions[i];
@@ -86,7 +75,8 @@ libraryReload(Library *library)
                 } else {
                     logError("Error loading api symbol %s", spec.function_name);
                     library->handle = NULL;
-                    library->id = 0;
+                    library->mtime.tv_nsec = 0;
+                    library->mtime.tv_sec = 0;
                     return 0;
                 }
             }
@@ -97,7 +87,8 @@ libraryReload(Library *library)
         } else {
             logError("Error loading game library");
             library->handle = NULL;
-            library->id = 0;
+            library->mtime.tv_nsec = 0;
+            library->mtime.tv_sec = 0;
             return 0;
         }
     }

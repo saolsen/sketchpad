@@ -1,10 +1,9 @@
-// Making something for the switch could b fun
 #include <GL/gl3w.h>
 #include <SDL2/SDL.h>
 
-#include "minitrace.h"
+#include "forest.h"
+#include "steves_reloader.h"
 
-#include "adventure.h"
 #include <imgui_impl_sdl_gl3.h>
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg.h>
@@ -15,11 +14,36 @@ NVGcontext *vg;
 int
 main(int argc, char **argv)
 {
-    mtr_init("adventure_trace.json");
-    MTR_META_PROCESS_NAME("adventure");
+    char *base_path = SDL_GetBasePath();
+    char trace_file_buf[256];
+    snprintf(trace_file_buf, 256, "%s%s", base_path, "../../../forest_trace.json");
+
+    mtr_init(trace_file_buf);
+    MTR_META_PROCESS_NAME("forest");
     MTR_META_THREAD_NAME("main thread");
 
     MTR_BEGIN("main", "setup");
+
+    UpdateAndRender *updateAndRender;
+
+    FunctionSpec function = {0};
+    function.function_name = "updateAndRender";
+    function.function_ptr = (void**)&updateAndRender;
+
+    LibrarySpec spec = {0};
+
+    char dll_file_buf[256];
+    snprintf(dll_file_buf, 256, "%s%s", base_path, "libforest.dylib");
+
+    spec.library_file = dll_file_buf;
+    spec.num_functions = 1;
+    spec.functions = &function;
+
+    Library library = libraryInit(spec);
+    if (!libraryReload(&library)) {
+        logError("Could not load library!");
+        exit(-1);
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO)) {
         exit(-1);
@@ -36,7 +60,7 @@ main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_Window *window = SDL_CreateWindow("adventure game",
+    SDL_Window *window = SDL_CreateWindow("forest",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           1024,
@@ -102,6 +126,8 @@ main(int argc, char **argv)
         i32 start_time = SDL_GetTicks();
         frame_time = start_time - last_start_time;
         last_start_time = start_time;
+
+        libraryReload(&library);
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {

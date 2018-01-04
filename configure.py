@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # pylint: disable=C0413
 # pylint: disable=C0303
+# pylint: disable=C0111
+# pylint: disable=C0330
+# pylint: disable=C0301
 """
 Build sketches
 """
@@ -30,6 +33,9 @@ def exe_file(name):
 
 def app_exe_file(appname, filename):
     return '$builddir/' + appname + '.app/Contents/MacOS/' + filename
+
+def app_resource_file(appname, filename):
+    return '$builddir/' + appname + '.app/Contents/Resources/' + filename
 
 def dylib_file(name):
     return '$builddir/' + name + '.dylib'
@@ -153,6 +159,10 @@ if PLATFORM == 'osx':
     N.build(obj_file('imgui_impl_sdl_gl3'), 'compile_cpp', cpp_dep_file('imgui_impl_sdl_gl3'))
     N.newline()
 
+    N.comment('minitrace')
+    N.build(obj_file('minitrace'), 'compile', dep_file('minitrace'))
+    N.newline()
+
     # Typical sketches, simple little programs
     N.comment('hello_world')
     N.build(obj_file('hello_world'), 'compile', c_file('hello_world'))
@@ -167,6 +177,14 @@ if PLATFORM == 'osx':
     N.comment('test_steve_tools')
     N.build(obj_file('test_steve_tools'), 'compile', c_file('test_steve_tools'))
     N.build(exe_file('test_steve_tools'), 'link_exe', obj_file('test_steve_tools'))
+    N.newline()
+
+    N.comment('test_tracing')
+    N.build(obj_file('test_tracing'), 'compile', c_file('test_tracing'))
+    N.build(exe_file('test_tracing'), 'link_exe', [
+        obj_file('minitrace'),
+        obj_file('test_tracing')
+    ])
     N.newline()
 
     # Reloading but not in an app bundle.
@@ -208,6 +226,7 @@ if PLATFORM == 'osx':
     N.build(exe_file('adventure'), 'link_sdl2', [
         obj_file('adventure_platform'),
         obj_file('adventure'),
+        obj_file('minitrace'),
         obj_file('gl3w'),
         obj_file('nanovg'),
         obj_file('imgui'),
@@ -218,6 +237,28 @@ if PLATFORM == 'osx':
         'ldflags': '-L3rdparty/lib -lpcg_random'
     })
     N.build(app_exe_file('adventure', 'adventure'), 'copy_file', exe_file('adventure'))
+    N.newline()
+
+    N.comment('forest')
+    N.build(app_bundle('forest'), 'app_bundle', variables={'name': 'forest'})
+    N.build(obj_file('forest_platform'), 'compile_cpp', cpp_file('forest_platform'))
+    N.build(obj_file('forest'), 'compile_cpp', cpp_file('forest'))
+    N.build(dylib_file('libforest'), 'link_dylib', obj_file('forest'))
+    N.build(exe_file('forest'), 'link_sdl2', [
+        obj_file('forest_platform'),
+        obj_file('minitrace'),
+        obj_file('gl3w'),
+        obj_file('nanovg'),
+        obj_file('imgui'),
+        obj_file('imgui_draw'),
+        obj_file('imgui_demo'),
+        obj_file('imgui_impl_sdl_gl3')
+        ], variables={
+        'ldflags': '-L3rdparty/lib -lpcg_random'
+    })
+    N.build(app_resource_file('forest', 'libforest.dylib'), 'copy_file', exe_file('libforest.dylib'))
+    N.build(app_exe_file('forest', 'forest'), 'copy_file', exe_file('forest'))
+    N.newline()
 
 elif PLATFORM == 'linux':
     N.comment('build sketches for %s' % PLATFORM)
