@@ -187,6 +187,14 @@ if PLATFORM == 'osx':
     ])
     N.newline()
 
+    N.comment('work_queue')
+    N.build(obj_file('work_queue'), 'compile', c_file('work_queue'))
+    N.build(exe_file('work_queue'), 'link_exe', [
+        obj_file('minitrace'),
+        obj_file('work_queue')
+    ])
+    N.newline()
+
     # Reloading but not in an app bundle.
     N.comment('test_reload')
     N.build(obj_file('test_reload'), 'compile', c_file('test_reload'))
