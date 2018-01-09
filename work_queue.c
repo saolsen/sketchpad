@@ -1,14 +1,21 @@
+// So you can use stdatomic on c11 on linux / osx but not on windows
+// on windows you can use the windows vs shit.
+// I can probably just use SDL2 for a real game for both things...
+
+// work stealing job queue system is p dope.
+// lets you queue from different threads quickly and fast.
+
 #include "steve.h"
 // @TODO: Please steve, write a really great work queue (work stealing? hmm?) and use it for lots of stuff.
 
 #include "minitrace.h"
 
-// @TODO: Windows
-// OSX
-#include <libkern/OSAtomic.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <assert.h>
+#include <stdatomic.h>
+// atomic_thread_fence(memory_order_acquire);
+// atomic_thread_fence(memory_order_release);
 
 // storeRelease(ptr, value)
 // set ptr to value and require that all earlier writes(stores) are not moved after tzhis.
@@ -21,6 +28,9 @@
 // This is casey's CompletePastReadsBeforeFutureReads, before he does the store.
 // __ReadBarrier() in vs
 // __load_fence for the processor
+
+#define storeRelease(ptr, value) ptr = value
+#define loadAquire(ptr) ptr
 
 
 // @NOTE: Wanna do a windows only experiemnt later, iocompletion ports and createthread for stuff.
@@ -48,13 +58,14 @@
 // How do you check the size of the cache line?
 
 typedef struct {
+    int job_id;
     char *string_to_print;
 } WorkQueueEntry;
 
 // @NOTE: Volatile tells the compiler that this value can change from non local stuff so the compiler is forced to reload it every time
 // it wants to use it and can't just keep in in a register. "Don't optimize out the loads of this thing."
 // The compiler might also insert the write barrior to all writes to volatile variables.
-static i32 volatile next_entry_to_do;
+_Atomic i32 next_entry_to_do;
 static i32 volatile entry_count;
 static WorkQueueEntry entries[256];
 
@@ -76,19 +87,20 @@ void *worker_fn(void* param)
     MTR_END("worker", "setup");
 
     for (int tick=0;tick<100000;tick++) {
-        if (next_entry_to_do < entry_count) {
-            MTR_BEGIN("worker", "print string");
-
-            // @ This line is not interlocked so two threads can see the same value.
-            // @ The compiler doesn't know that multiple threads could write this value.
-            int entry_index = OSAtomicIncrement32Barrier(&next_entry_to_do) - 1; // InterlockedIncrement() in windows.
-            
-            // could use the barrior version of atomic increment and not need the loadAquire.
-            // def safer to do that. (I think?)
-            WorkQueueEntry *entry = entries + entry_index;
-            
-            logInfo("Thread %i: %s", thread_id, entry->string_to_print);
-            MTR_END("worker", "print string");
+        i32 entry_index = next_entry_to_do;
+        if (entry_index < entry_count) {
+            if (atomic_compare_exchange_weak(&next_entry_to_do, &entry_index, entry_index+1)) {
+                // MTR_BEGIN("worker", "run job");
+                WorkQueueEntry *entry = entries + entry_index;
+                
+                MTR_FLOW_STEP("job", "printstring", entry->job_id, "begin");
+                MTR_FLOW_STEP("job", "printstring", entry->job_id, "printing");
+                logInfo("Thread %i: %s", thread_id, entry->string_to_print);
+                
+                
+                MTR_FLOW_FINISH("job", "printstring", entry->job_id);
+                // MTR_END("worker", "run job");
+            }
         }
     }
 
@@ -99,15 +111,15 @@ void *worker_fn(void* param)
 // this means aquire and release are FREE on x64, don't add a fence when you don't need one sucka.
 // I should probably work on somthing way more low level.
 
-void pushString(char *s)
+void pushString(char *s, int job_id)
 {
     assert(entry_count < LEN(entries));
     // @TODO: These writes are not in order.
     WorkQueueEntry *entry = entries + entry_count;
     entry->string_to_print = s;
+    entry->job_id = job_id;
 
-    // write all before here.
-
+    // write all before here. @TODO:
 
     ++entry_count;
 }
@@ -131,17 +143,29 @@ int main()
     ThreadInfo thread_infos[32];
     i32 num_threads = num_cores - 1;
 
-    pushString("String 0\n");
-    pushString("String 1\n");
-    pushString("String 2\n");
-    pushString("String 3\n");
-    pushString("String 4\n");
-    pushString("String 5\n");
-    pushString("String 6\n");
-    pushString("String 7\n");
-    pushString("String 8\n");
-    pushString("String 9\n");
-    pushString("String 10\n");
+    MTR_INSTANT("main", "start pushing jobs");
+
+    MTR_FLOW_START("job", "printstring", 0);
+    pushString("String 0\n",0);
+    //MTR_START("job", "printstring", 1);
+    pushString("String 1\n",1);
+    //MTR_START("job", "printstring", 2);
+    pushString("String 2\n",2);
+    //MTR_START("job", "printstring", 3);
+    pushString("String 3\n",3);
+    //MTR_START("job", "printstring", 4);
+    pushString("String 4\n",4);
+    //MTR_START("job", "printstring", 5);
+    pushString("String 5\n",5);
+    //MTR_START("job", "printstring", 6);
+    pushString("String 6\n",6);
+    //MTR_START("job", "printstring", 7);
+    pushString("String 7\n",7);
+    //MTR_START("job", "printstring", 8);
+    pushString("String 8\n",8);
+    //MTR_START("job", "printstring", 9);
+    pushString("String 9\n",9);
+    /* pushString("String 10\n");
     pushString("String 11\n");
     pushString("String 12\n");
     pushString("String 13\n");
@@ -160,7 +184,7 @@ int main()
     pushString("String 26\n");
     pushString("String 27\n");
     pushString("String 28\n");
-    pushString("String 29\n");
+    pushString("String 29\n"); */
 
     for (int i=0; i<num_threads; i++) {
         thread_infos[i].thread_id = i;
@@ -175,5 +199,10 @@ int main()
 
     mtr_flush();
     mtr_shutdown();
+
+    // full read write barrior
+
     return 0;
 }
+
+// Is this really easy if you use c++ stdatomic?
